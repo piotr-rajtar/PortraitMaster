@@ -12,7 +12,15 @@ exports.add = async (req, res) => {
     const fileExtention = fileName.substr(-3);
     const allowedExtentions = ['jpg', 'jpeg', 'gif', 'png'];
 
-    if(title && author && email && file && allowedExtentions.includes(fileExtention)) { // if fields are not empty...
+    if(
+      title 
+      && author 
+      && email 
+      && file 
+      && allowedExtentions.includes(fileExtention)
+      && author.length <= 50
+      && title.length <= 25
+    ) {
       const newPhoto = new Photo({ title, author, email, src: fileName, votes: 0 });
       await newPhoto.save(); // ...save new photo in DB
       res.json(newPhoto);
