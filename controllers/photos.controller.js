@@ -1,4 +1,3 @@
-const e = require('express');
 const Photo = require('../models/photo.model');
 const Voter = require('../models/Voter.model');
 const escape = require('../utils').escape;
@@ -64,29 +63,34 @@ exports.vote = async (req, res) => {
     const photoToUpdate = await Photo.findOne({ _id: req.params.id });
     const voter = await Voter.findOne({ user: ip });
 
-    if(!voter) {
-      const newVoter = new Voter({ user: ip, votes: req.params.id });
-      await newVoter.save();
-    } else {
-      const votes = voter.votes;
-      const ifVoted = votes.includes(req.params.id);
+    if(photoToUpdate) {
+  
+      if(!voter) {
+        const newVoter = new Voter({ user: ip, votes: req.params.id });
+        await newVoter.save();
 
-      if(ifVoted) res.status(500).json({ message: 'Already voted' })
-      else {
-        voter.votes.push(req.params.id);
-        await voter.save();
+        photoToUpdate.votes++;
+        await photoToUpdate.save();
+        res.send({ message: 'OK' });
+        
+      } else {
+        const votes = voter.votes;
+        const ifVoted = votes.includes(req.params.id);
+
+        if(ifVoted) res.status(500).json({ message: 'Already voted' })
+        else {
+          voter.votes.push(req.params.id);
+          await voter.save();
+
+          photoToUpdate.votes++;
+          await photoToUpdate.save();
+          res.send({ message: 'OK' });
+        }
       }
     }
-
-    if(!photoToUpdate) res.status(404).json({ message: 'Not found' });
-    else {
-      photoToUpdate.votes++;
-      await photoToUpdate.save();
-      res.send({ message: 'OK' });
-    }
+    else res.status(404).json({ message: 'Not found' });
 
   } catch(err) {
     res.status(500).json(err);
   }
-
 };
