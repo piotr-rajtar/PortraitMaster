@@ -1,6 +1,8 @@
 const Photo = require('../models/photo.model');
 const Voter = require('../models/Voter.model');
-const escape = require('../utils').escape;
+const textEscaper = require('../utils').textEscaper;
+const fileExtentionChecker = require('../utils').fileExtentionChecker;
+const lengthChecker = require('../utils').lengthChecker;
 
 /****** SUBMIT PHOTO ********/
 
@@ -11,22 +13,24 @@ exports.add = async (req, res) => {
     const file = req.files.file;
 
     const fileName = file.path.split('/').slice(-1)[0]; // cut only filename from full path, e.g. C:/test/abc.jpg -> abc.jpg
-    const fileExtention = fileName.substr(-3);
-    const allowedExtentions = ['jpg', 'jpeg', 'gif', 'png'];
+    
+    const isExtentionValid = fileExtentionChecker(fileName);
+    const authorLength = lengthChecker(author);
+    const titleLength = lengthChecker(title);
 
     if(
       title 
       && author 
       && email 
       && file 
-      && allowedExtentions.includes(fileExtention)
-      && author.length <= 50
-      && title.length <= 25
+      && isExtentionValid
+      && authorLength <= 50
+      && titleLength <= 25
     ) {
 
-      const cleanAuthor = escape(author);
-      const cleanTitle = escape(title);
-      const cleanEmail = escape(email);
+      const cleanAuthor = textEscaper(author);
+      const cleanTitle = textEscaper(title);
+      const cleanEmail = textEscaper(email);
 
       const newPhoto = new Photo({ title: cleanTitle, author: cleanAuthor, email: cleanEmail, src: fileName, votes: 0 });
       await newPhoto.save(); // ...save new photo in DB
@@ -72,7 +76,7 @@ exports.vote = async (req, res) => {
         photoToUpdate.votes++;
         await photoToUpdate.save();
         res.send({ message: 'OK' });
-        
+
       } else {
         const votes = voter.votes;
         const ifVoted = votes.includes(req.params.id);
