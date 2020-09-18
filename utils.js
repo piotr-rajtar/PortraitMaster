@@ -1,3 +1,5 @@
+const Voter = require('./models/Voter.model');
+
 exports.fileExtentionChecker = (fileName) => {
     const allowedExtentions = ['jpg', 'jpeg', 'gif', 'png'];
     const fileExtention = fileName.substr(-3);
@@ -32,6 +34,17 @@ exports.textEscaper = (text) => {
 
     const pattern = /[&<>"']/g;
     const escapedText = text.replace(pattern, signReplacer);
-    
+
     return escapedText;
+}
+
+exports.addVoter = async (ip, id) => {
+    const newVoter = new Voter({ user: ip, votes: id });
+    await newVoter.save();
+}
+
+exports.voteValidator = (voter, id) => {
+    const votes = voter.votes;
+    const ifVoted = votes.includes(id);
+    return ifVoted;
 }
